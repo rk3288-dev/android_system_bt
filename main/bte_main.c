@@ -74,6 +74,10 @@
 #endif
 #endif // BLUETOOTH_RTK
 
+#ifdef RDA587X_BLUETOOTH
+#define PRELOAD_START_TIMEOUT_MS 10000  // 10 seconds
+#endif
+
 /******************************************************************************
 **  Variables
 ******************************************************************************/

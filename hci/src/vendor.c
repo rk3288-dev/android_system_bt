@@ -37,6 +37,10 @@
 static const char *VENDOR_LIBRARY_NAME_USB = "libbt-vendor_usb.so";
 static const char *VENDOR_LIBRARY_NAME_UART = "libbt-vendor_uart.so";
 #endif
+#ifdef ROCKCHIP_BLUETOOTH
+static const char *VENDOR_LIBRARY_NAME_RTL8723BS = "libbt-vendor-rtl8723bs.so";
+static const char *VENDOR_LIBRARY_NAME_RTL8723AU = "libbt-vendor-rtl8723bu.so";
+#endif
 static const char *VENDOR_LIBRARY_NAME = "libbt-vendor.so";
 static const char *VENDOR_LIBRARY_SYMBOL_NAME = "BLUETOOTH_VENDOR_LIB_INTERFACE";
 
@@ -68,6 +72,10 @@ static bool vendor_open(
     strcpy(vendor_so, VENDOR_LIBRARY_NAME_USB);
   } else if (!strncmp(g_bt_chip_type, "RTL", 3)) {
     strcpy(vendor_so, VENDOR_LIBRARY_NAME_UART);
+  } else if (!strncmp(g_bt_chip_type, "RTL8723BS", 9)) {
+    strcpy(vendor_so, "libbt-vendor-rtl8723bs.so");
+  } else if (!strcmp(g_bt_chip_type, "RTL8723BU") || !strcmp(g_bt_chip_type, "RTL8723AU")) {
+    strcpy(vendor_so, "libbt-vendor-rtl8723bu.so");
   } else {
     strcpy(vendor_so, VENDOR_LIBRARY_NAME);
   }

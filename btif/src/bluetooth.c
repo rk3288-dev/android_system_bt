@@ -158,6 +158,28 @@ static int disable(void) {
   return BT_STATUS_SUCCESS;
 }
 
+#ifdef ROCKCHIP_BLUETOOTH
+static int enable_radio( void )
+{
+  LOG_INFO("enable");
+
+  /* sanity check */
+  if (interface_ready() == FALSE)
+    return BT_STATUS_NOT_READY;
+
+  return BT_STATUS_NOT_READY;
+}
+
+static int disable_radio(void)
+{
+  /* sanity check */
+  if (interface_ready() == FALSE)
+    return BT_STATUS_NOT_READY;
+
+  return BT_STATUS_NOT_READY;
+}
+#endif
+
 static void cleanup(void) {
   stack_manager_get_interface()->clean_up_stack_async();
 }
@@ -378,6 +400,14 @@ static const void* get_profile_interface (const char *profile_id)
     return NULL;
 }
 
+#ifdef ROCKCHIP_BLUETOOTH
+static const void* get_fm_interface ()
+{
+  LOG_INFO("get_fm_interface");
+  return NULL;
+}
+#endif
+
 int dut_mode_configure(uint8_t enable)
 {
     LOG_INFO("dut_mode_configure");
@@ -439,6 +469,10 @@ static const bt_interface_t bluetoothInterface = {
     init,
     enable,
     disable,
+#ifdef ROCKCHIP_BLUETOOTH
+    enable_radio,
+    disable_radio,
+#endif
     cleanup,
     get_adapter_properties,
     get_adapter_property,
@@ -471,6 +505,9 @@ static const bt_interface_t bluetoothInterface = {
     config_clear,
     interop_database_clear,
     interop_database_add,
+#ifdef ROCKCHIP_BLUETOOTH
+    get_fm_interface,
+#endif
 };
 
 const bt_interface_t* bluetooth__get_bluetooth_interface ()

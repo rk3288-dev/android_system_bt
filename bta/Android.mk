@@ -9,6 +9,10 @@ endif
 LOCAL_CFLAGS += -DBUILDCFG $(bdroid_CFLAGS) -std=c99
 LOCAL_CLANG_CFLAGS += -Wno-error=gnu-variable-sized-type-not-at-end
 
+ifeq ($(strip $(BOARD_CONNECTIVITY_MODULE)), esp8089_bk3515)
+    LOCAL_CFLAGS += -DBT_BK3515A
+endif
+
 LOCAL_SRC_FILES:= \
     ./dm/bta_dm_ci.c \
     ./dm/bta_dm_act.c \
