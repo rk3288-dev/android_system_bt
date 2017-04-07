@@ -20,6 +20,10 @@
 
 #include <cutils/log.h>
 
+#ifdef ROCKCHIP_BLUETOOTH
+extern char g_bt_chip_type[]; // WTF??? HERE???
+#endif
+
 #define LOG_VERBOSE(...) ALOGV(__VA_ARGS__)
 #define LOG_DEBUG(...)   ALOGD(__VA_ARGS__)
 #define LOG_INFO(...)    ALOGI(__VA_ARGS__)

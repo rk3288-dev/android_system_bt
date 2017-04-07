@@ -79,6 +79,10 @@
 #include "stdio.h"
 #include <dlfcn.h>
 
+#ifdef BLUETOOTH_RTK_COEX
+#include "rtk_parse.h"
+#endif
+
 #if (BTA_AV_SINK_INCLUDED == TRUE)
 OI_CODEC_SBC_DECODER_CONTEXT context;
 OI_UINT32 contextData[CODEC_DATA_WORDS(2, SBC_CODEC_FAST_FILTER_BUFFERS)];
@@ -616,6 +620,12 @@ static void btif_a2dp_data_cb(tUIPC_CH_ID ch_id, tUIPC_EVENT event)
 static UINT16 btif_media_task_get_sbc_rate(void)
 {
     UINT16 rate = DEFAULT_SBC_BITRATE;
+
+#ifdef ROCKCHIP_BLUETOOTH
+    if (!strncmp(g_bt_chip_type, "RTL", 3)) {
+    	rate = 229;
+    }
+#endif
 
     /* restrict bitrate if a2dp link is non-edr */
     if (!btif_av_is_peer_edr())
@@ -1625,6 +1635,13 @@ static void btif_media_task_enc_init(BT_HDR *p_msg)
             btif_media_cb.encoder.s16NumOfBlocks,
             btif_media_cb.encoder.s16AllocationMethod, btif_media_cb.encoder.u16BitRate,
             btif_media_cb.encoder.s16SamplingFreq);
+
+#ifdef BLUETOOTH_RTK_COEX
+    if (!strncmp(g_bt_chip_type, "RTL", 3)) {
+        rtk_parse_manager_get_interface()->rtk_add_bitpool_to_fw(
+            btif_media_cb.encoder.s16BitPool);
+    }
+#endif
 
     /* Reset entirely the SBC encoder */
     SBC_Encoder_Init(&(btif_media_cb.encoder));

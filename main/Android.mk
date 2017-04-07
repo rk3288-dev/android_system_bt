@@ -133,6 +133,8 @@ LOCAL_SHARED_LIBRARIES := \
     libpower \
     libz
 
+LOCAL_SHARED_LIBRARIES += libhardware_legacy
+
 LOCAL_STATIC_LIBRARIES := \
     libtinyxml2 \
     libbt-qcom_sbc_decoder
@@ -167,6 +169,12 @@ LOCAL_REQUIRED_MODULES := \
     bt_stack.conf \
     libbt-hci \
     libbt-vendor
+
+#ifeq ($(BOARD_HAVE_BLUETOOTH_RTK),true)
+LOCAL_REQUIRED_MODULES += \
+    libbt-vendor_uart \
+    libbt-vendor_usb
+#endif
 
 LOCAL_MULTILIB := 32
 

@@ -20,6 +20,9 @@
 
 #include <assert.h>
 #include <dlfcn.h>
+#ifdef ROCKCHIP_BLUETOOTH
+#include <string.h>
+#endif
 
 #include "buffer_allocator.h"
 #include "bt_vendor_lib.h"
@@ -29,6 +32,11 @@
 
 #define LAST_VENDOR_OPCODE_VALUE VENDOR_DO_EPILOG
 
+#ifdef BLUETOOTH_RTK
+#include "bdroid_buildcfg.h"
+static const char *VENDOR_LIBRARY_NAME_USB = "libbt-vendor_usb.so";
+static const char *VENDOR_LIBRARY_NAME_UART = "libbt-vendor_uart.so";
+#endif
 static const char *VENDOR_LIBRARY_NAME = "libbt-vendor.so";
 static const char *VENDOR_LIBRARY_SYMBOL_NAME = "BLUETOOTH_VENDOR_LIB_INTERFACE";
 
@@ -46,18 +54,37 @@ static const bt_vendor_callbacks_t lib_callbacks;
 static bool vendor_open(
     const uint8_t *local_bdaddr,
     const hci_t *hci_interface) {
+#ifdef ROCKCHIP_BLUETOOTH
+  char type[64];
+#endif
+  char vendor_so[64];
   assert(lib_handle == NULL);
   hci = hci_interface;
 
-  lib_handle = dlopen(VENDOR_LIBRARY_NAME, RTLD_NOW);
+#ifdef ROCKCHIP_BLUETOOTH
+  extern int check_wifi_chip_type_string(char *type);
+  check_wifi_chip_type_string(g_bt_chip_type);
+  if (strstr(g_bt_chip_type, "AU") != NULL || strstr(g_bt_chip_type, "BU") != NULL) {
+    strcpy(vendor_so, VENDOR_LIBRARY_NAME_USB);
+  } else if (!strncmp(g_bt_chip_type, "RTL", 3)) {
+    strcpy(vendor_so, VENDOR_LIBRARY_NAME_UART);
+  } else {
+    strcpy(vendor_so, VENDOR_LIBRARY_NAME);
+  }
+  ALOGD("%s load %s", __func__, vendor_so);
+#else
+  strcpy(vendor_so, VENDOR_LIBRARY_NAME);
+#endif
+
+  lib_handle = dlopen(vendor_so, RTLD_NOW);
   if (!lib_handle) {
-    LOG_ERROR("%s unable to open %s: %s", __func__, VENDOR_LIBRARY_NAME, dlerror());
+    LOG_ERROR("%s unable to open %s: %s", __func__, vendor_so, dlerror());
     goto error;
   }
 
   lib_interface = (bt_vendor_interface_t *)dlsym(lib_handle, VENDOR_LIBRARY_SYMBOL_NAME);
   if (!lib_interface) {
-    LOG_ERROR("%s unable to find symbol %s in %s: %s", __func__, VENDOR_LIBRARY_SYMBOL_NAME, VENDOR_LIBRARY_NAME, dlerror());
+    LOG_ERROR("%s unable to find symbol %s in %s: %s", __func__, VENDOR_LIBRARY_SYMBOL_NAME, vendor_so, dlerror());
     goto error;
   }
 
@@ -172,7 +199,15 @@ static void transmit_completed_callback(BT_HDR *response, void *context) {
 // Called back from vendor library when it wants to send an HCI command.
 static uint8_t transmit_cb(UNUSED_ATTR uint16_t opcode, void *buffer, tINT_CMD_CBACK callback) {
   assert(hci != NULL);
+#ifdef BLUETOOTH_RTK
+  if (!strncmp(g_bt_chip_type, "RTL", 3)) {
+    hci->transmit_int_command(opcode, (BT_HDR *)buffer, callback);
+  } else {
+    hci->transmit_command((BT_HDR *)buffer, transmit_completed_callback, NULL, callback);
+  }
+#else
   hci->transmit_command((BT_HDR *)buffer, transmit_completed_callback, NULL, callback);
+#endif
   return true;
 }
 

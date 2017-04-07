@@ -26,6 +26,32 @@
 #include "osi/include/compat.h"
 #include "osi/include/config.h"
 #include "osi/include/log.h"
+#ifdef BLUETOOTH_RTK
+#include "bt_hci_bdroid.h"
+#include "bdroid_buildcfg.h"
+extern char bt_hci_device_node[512];
+extern unsigned int rtkbt_logfilter;
+#endif
+
+#ifdef BLUETOOTH_RTK
+void bte_load_rtkbt_conf(const char *path)
+{
+    assert(path != NULL);
+
+    ALOGI("%s attempt to load rtkbt conf from %s", __func__, path);
+
+    config_t *config = config_new(path);
+    if (!config) {
+        ALOGI("%s file >%s< not found", __func__, path);
+        return;
+    }
+
+    memset(bt_hci_device_node, 0, sizeof(bt_hci_device_node));
+    strcpy(bt_hci_device_node, "/dev/ttyS0");
+
+    config_free(config);
+}
+#endif
 
 #if (defined(BLE_INCLUDED) && (BLE_INCLUDED == TRUE))
 extern int btm_ble_tx_power[BTM_BLE_ADV_TX_POWER_MAX + 1];
