@@ -1974,8 +1974,8 @@ tBTM_STATUS btm_ble_start_inquiry (UINT8 mode, UINT8   duration)
     tBTM_STATUS status = BTM_CMD_STARTED;
     tBTM_BLE_CB *p_ble_cb = &btm_cb.ble_ctr_cb;
     tBTM_INQUIRY_VAR_ST      *p_inq = &btm_cb.btm_inq_vars;
-    int scan_int = BTM_BLE_LOW_LATENCY_SCAN_INT;
-    int scan_win = BTM_BLE_LOW_LATENCY_SCAN_WIN;
+    UINT32 scan_int = BTM_BLE_LOW_LATENCY_SCAN_INT;
+    UINT32 scan_win = BTM_BLE_LOW_LATENCY_SCAN_WIN;
 
 #ifdef ROCKCHIP_BLUETOOTH
     if (!strncmp(g_bt_chip_type, "RTL", 3)) {
@@ -2957,8 +2957,8 @@ void btm_ble_stop_inquiry(void)
 {
     tBTM_INQUIRY_VAR_ST *p_inq = &btm_cb.btm_inq_vars;
     tBTM_BLE_CB *p_ble_cb = &btm_cb.ble_ctr_cb;
-    int scan_int = BTM_BLE_LOW_LATENCY_SCAN_INT;
-    int scan_win = BTM_BLE_LOW_LATENCY_SCAN_WIN;
+    UINT32 scan_int = BTM_BLE_LOW_LATENCY_SCAN_INT;
+    UINT32 scan_win = BTM_BLE_LOW_LATENCY_SCAN_WIN;
 
 #ifdef ROCKCHIP_BLUETOOTH
     if (!strncmp(g_bt_chip_type, "RTL", 3)) {
