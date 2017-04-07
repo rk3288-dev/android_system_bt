@@ -85,6 +85,9 @@
 #define BTIF_DM_DEFAULT_INQ_MAX_RESULTS     0
 #define BTIF_DM_DEFAULT_INQ_MAX_DURATION    10
 #define BTIF_DM_MAX_SDP_ATTEMPTS_AFTER_PAIRING 2
+#ifdef ROCKCHIP_BLUETOOTH
+#define BOND_RETRY_MAXIMUM_RETRY_TIMES      3
+#endif
 
 #define NUM_TIMEOUT_RETRIES                 5
 
@@ -153,6 +156,11 @@ typedef struct
     BD_ADDR  bdaddr;    /* peer bdaddr */
     bt_out_of_band_data_t oob_data;
 } btif_dm_oob_cb_t;
+
+#ifdef ROCKCHIP_BLUETOOTH
+bt_bdaddr_t tempAddr;
+int bond_retry_times = 0;
+#endif
 
 typedef struct
 {
@@ -647,6 +655,24 @@ static void bond_state_changed(bt_status_t status, bt_bdaddr_t *bd_addr, bt_bond
 
     HAL_CBACK(bt_hal_cbacks, bond_state_changed_cb, status, bd_addr, state);
 
+#ifdef ROCKCHIP_BLUETOOTH
+    if (pairing_cb.state == BT_BOND_STATE_BONDING &&
+            state == BT_BOND_STATE_NONE &&
+            status == BT_STATUS_RMT_DEV_DOWN &&
+            bond_retry_times < BOND_RETRY_MAXIMUM_RETRY_TIMES) {
+        bond_retry_times++;
+        btif_dm_cb_create_bond(&tempAddr, BTA_TRANSPORT_UNKNOWN);
+    } else {
+        bond_retry_times = 0;
+        HAL_CBACK(bt_hal_cbacks, bond_state_changed_cb, status, bd_addr, state);
+        if (state == BT_BOND_STATE_BONDING) {
+            pairing_cb.state = state;
+            bdcpy(pairing_cb.bd_addr, bd_addr->address);
+        } else {
+            memset(&pairing_cb, 0, sizeof(pairing_cb));
+        }
+    }
+#else
     if (state == BT_BOND_STATE_BONDING)
     {
         pairing_cb.state = state;
@@ -659,6 +685,7 @@ static void bond_state_changed(bt_status_t status, bt_bdaddr_t *bd_addr, bt_bond
         else
             BTIF_TRACE_DEBUG("%s: BR-EDR service discovery active", __func__);
     }
+#endif
 }
 
 /* store remote version in bt config to always have access
@@ -2618,6 +2645,11 @@ bt_status_t btif_dm_create_bond(const bt_bdaddr_t *bd_addr, int transport)
     bdcpy(create_bond_cb.bdaddr.address, bd_addr->address);
 
     bdstr_t bdstr;
+
+#ifdef ROCKCHIP_BLUETOOTH
+    memcpy(&tempAddr, bd_addr, sizeof(bt_bdaddr_t));
+#endif
+
     BTIF_TRACE_EVENT("%s: bd_addr=%s, transport=%d", __FUNCTION__, bdaddr_to_string(bd_addr, bdstr, sizeof(bdstr)), transport);
     if (pairing_cb.state != BT_BOND_STATE_NONE)
         return BT_STATUS_BUSY;

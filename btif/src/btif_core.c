@@ -402,8 +402,41 @@ static void btif_fetch_local_bdaddr(bt_bdaddr_t *local_addr)
 
     const uint8_t null_bdaddr[BD_ADDR_LEN] = {0,0,0,0,0,0};
 
+#ifdef ROCKCHIP_BLUETOOTH
+    {
+        int vflash_fd = open("/dev/vflash", O_RDONLY);
+        if (vflash_fd > 0)
+        {
+            char bd_addr[6] = {0};
+            BTIF_TRACE_DEBUG("Get local bdaddr from vflash");
+            #define VFLASH_READ_BDA  0x01
+            if (ioctl(vflash_fd, VFLASH_READ_BDA, (unsigned long) bd_addr) >= 0
+                && memcmp(bd_addr, null_bdaddr, BD_ADDR_LEN) != 0)
+            {
+                local_addr->address[0] = bd_addr[5];
+                local_addr->address[1] = bd_addr[4];
+                local_addr->address[2] = bd_addr[3];
+                local_addr->address[3] = bd_addr[2];
+                local_addr->address[4] = bd_addr[1];
+                local_addr->address[5] = bd_addr[0];
+
+                valid_bda = TRUE;
+                BTIF_TRACE_DEBUG("Got Factory BDA %02X:%02X:%02X:%02X:%02X:%02X",
+                    local_addr->address[0], local_addr->address[1],
+                    local_addr->address[2], local_addr->address[3],
+                    local_addr->address[4], local_addr->address[5]);
+            }
+            close(vflash_fd);
+        }
+    }
+#endif
+
     /* Get local bdaddr storage path from property */
+#ifdef ROCKCHIP_BLUETOOTH
+    if (!valid_bda && osi_property_get(PROPERTY_BT_BDADDR_PATH, val, NULL))
+#else
     if (osi_property_get(PROPERTY_BT_BDADDR_PATH, val, NULL))
+#endif
     {
         int addr_fd;
 
@@ -1209,6 +1242,10 @@ bt_status_t btif_set_adapter_property(const bt_property_t *property)
                 BTA_DmSetDeviceName((char *)bd_name);
 
                 storage_req_id = BTIF_CORE_STORAGE_ADAPTER_WRITE;
+#ifdef BLUETOOTH_RTK
+                btif_config_set_str("Adapter", "Name",(char *)bd_name);
+                btif_config_save();
+#endif
             }
             break;
 

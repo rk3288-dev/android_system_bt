@@ -44,6 +44,10 @@
 #include "gatt_int.h"
 #endif /* BLE_INCLUDED */
 
+#ifdef ROCKCHIP_BLUETOOTH
+extern char g_bt_chip_type[];
+#endif
+
 extern fixed_queue_t *btu_general_alarm_queue;
 extern thread_t *bt_workqueue_thread;
 
@@ -422,8 +426,17 @@ static void btm_decode_ext_features_page (UINT8 page_number, const UINT8 *p_feat
         else
             l2cu_set_non_flushable_pbf(FALSE);
 #endif
+#ifdef ROCKCHIP_BLUETOOTH
+        if (!strncmp(g_bt_chip_type, "RTL", 3)) {
+            BTM_SetPageScanType (BTM_SCAN_TYPE_STANDARD);
+            BTM_SetInquiryScanType (BTM_SCAN_TYPE_STANDARD);
+        } else {
+#endif
         BTM_SetPageScanType (BTM_DEFAULT_SCAN_TYPE);
         BTM_SetInquiryScanType (BTM_DEFAULT_SCAN_TYPE);
+#ifdef ROCKCHIP_BLUETOOTH
+        }
+#endif
 
         break;
 

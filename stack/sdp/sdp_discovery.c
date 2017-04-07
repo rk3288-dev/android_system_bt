@@ -96,6 +96,12 @@ static UINT8 *sdpu_build_uuid_seq (UINT8 *p_out, UINT16 num_uuids, tSDP_UUID *p_
         }
         else if (p_uuid_list->len == 16)
         {
+#ifdef ROCKCHIP_BLUETOOTH
+            if (p_uuid_list->len > 16) {
+                SDP_TRACE_ERROR("%s: uuid len > 16, not invalid uuid, skip all", __func__);
+                break;
+            }
+#endif
             UINT8_TO_BE_STREAM (p_out, (UUID_DESC_TYPE << 3) | SIZE_SIXTEEN_BYTES);
             ARRAY_TO_BE_STREAM (p_out, p_uuid_list->uu.uuid128, p_uuid_list->len);
         }

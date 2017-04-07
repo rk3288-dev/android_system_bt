@@ -159,8 +159,18 @@ void *allocation_tracker_notify_free(UNUSED_ATTR uint8_t allocator_id, void *ptr
 
   allocation_t *allocation = (allocation_t *)hash_map_get(allocations, ptr);
   assert(allocation);                               // Must have been tracked before
+#ifndef ROCKCHIP_BLUETOOTH
   assert(!allocation->freed);                       // Must not be a double free
+#endif
   assert(allocation->allocator_id == allocator_id); // Must be from the same allocator
+
+#ifdef ROCKCHIP_BLUETOOTH
+  if (allocation->freed) {
+    pthread_mutex_unlock(&lock);
+    return ptr;
+  }
+#endif
+
   allocation->freed = true;
 
   UNUSED_ATTR const char *beginning_canary = ((char *)ptr) - canary_size;

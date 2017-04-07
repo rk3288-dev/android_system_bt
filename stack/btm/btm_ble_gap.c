@@ -1974,6 +1974,15 @@ tBTM_STATUS btm_ble_start_inquiry (UINT8 mode, UINT8   duration)
     tBTM_STATUS status = BTM_CMD_STARTED;
     tBTM_BLE_CB *p_ble_cb = &btm_cb.ble_ctr_cb;
     tBTM_INQUIRY_VAR_ST      *p_inq = &btm_cb.btm_inq_vars;
+    int scan_int = BTM_BLE_LOW_LATENCY_SCAN_INT;
+    int scan_win = BTM_BLE_LOW_LATENCY_SCAN_WIN;
+
+#ifdef ROCKCHIP_BLUETOOTH
+    if (!strncmp(g_bt_chip_type, "RTL", 3)) {
+        scan_int = 18;
+        scan_win = 18;
+    }
+#endif
 
     BTM_TRACE_DEBUG("btm_ble_start_inquiry: mode = %02x inq_active = 0x%02x", mode, btm_cb.btm_inq_vars.inq_active);
 
@@ -1988,8 +1997,8 @@ tBTM_STATUS btm_ble_start_inquiry (UINT8 mode, UINT8   duration)
     if (!BTM_BLE_IS_SCAN_ACTIVE(p_ble_cb->scan_activity))
     {
         btsnd_hcic_ble_set_scan_params(BTM_BLE_SCAN_MODE_ACTI,
-                                        BTM_BLE_LOW_LATENCY_SCAN_INT,
-                                        BTM_BLE_LOW_LATENCY_SCAN_WIN,
+                                        scan_int,
+                                        scan_win,
                                         btm_cb.ble_ctr_cb.addr_mgnt_cb.own_addr_type,
                                         SP_ADV_ALL);
 #if (defined BLE_PRIVACY_SPT && BLE_PRIVACY_SPT == TRUE)
@@ -1999,13 +2008,13 @@ tBTM_STATUS btm_ble_start_inquiry (UINT8 mode, UINT8   duration)
         p_ble_cb->inq_var.scan_duplicate_filter  = BTM_BLE_DUPLICATE_DISABLE;
         status = btm_ble_start_scan();
     }
-    else if ((p_ble_cb->inq_var.scan_interval != BTM_BLE_LOW_LATENCY_SCAN_INT) ||
-            (p_ble_cb->inq_var.scan_window != BTM_BLE_LOW_LATENCY_SCAN_WIN)) {
+    else if ((p_ble_cb->inq_var.scan_interval != scan_int) ||
+            (p_ble_cb->inq_var.scan_window != scan_win)) {
         BTM_TRACE_DEBUG("%s, restart LE scan with low latency scan params", __FUNCTION__);
         btsnd_hcic_ble_set_scan_enable(BTM_BLE_SCAN_DISABLE, BTM_BLE_DUPLICATE_ENABLE);
         btsnd_hcic_ble_set_scan_params(BTM_BLE_SCAN_MODE_ACTI,
-                                        BTM_BLE_LOW_LATENCY_SCAN_INT,
-                                        BTM_BLE_LOW_LATENCY_SCAN_WIN,
+                                        scan_int,
+                                        scan_win,
                                         btm_cb.ble_ctr_cb.addr_mgnt_cb.own_addr_type,
                                         SP_ADV_ALL);
         btsnd_hcic_ble_set_scan_enable(BTM_BLE_SCAN_ENABLE, BTM_BLE_DUPLICATE_DISABLE);
@@ -2948,6 +2957,15 @@ void btm_ble_stop_inquiry(void)
 {
     tBTM_INQUIRY_VAR_ST *p_inq = &btm_cb.btm_inq_vars;
     tBTM_BLE_CB *p_ble_cb = &btm_cb.ble_ctr_cb;
+    int scan_int = BTM_BLE_LOW_LATENCY_SCAN_INT;
+    int scan_win = BTM_BLE_LOW_LATENCY_SCAN_WIN;
+
+#ifdef ROCKCHIP_BLUETOOTH
+    if (!strncmp(g_bt_chip_type, "RTL", 3)) {
+        scan_int = 18;
+        scan_win = 18;
+    }
+#endif
 
     alarm_cancel(p_ble_cb->inq_var.inquiry_timer);
 
@@ -2956,8 +2974,8 @@ void btm_ble_stop_inquiry(void)
     /* If no more scan activity, stop LE scan now */
     if (!BTM_BLE_IS_SCAN_ACTIVE(p_ble_cb->scan_activity))
         btm_ble_stop_scan();
-    else if((p_ble_cb->inq_var.scan_interval != BTM_BLE_LOW_LATENCY_SCAN_INT) ||
-            (p_ble_cb->inq_var.scan_window != BTM_BLE_LOW_LATENCY_SCAN_WIN))
+    else if((p_ble_cb->inq_var.scan_interval != scan_int) ||
+            (p_ble_cb->inq_var.scan_window != scan_win))
     {
         BTM_TRACE_DEBUG("%s: setting default params for ongoing observe", __FUNCTION__);
         btm_ble_stop_scan();

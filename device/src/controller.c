@@ -21,6 +21,9 @@
 #include "device/include/controller.h"
 
 #include <assert.h>
+#ifdef ROCKCHIP_BLUETOOTH
+#include <string.h>
+#endif
 
 #include "bt_types.h"
 #include "btcore/include/event_mask.h"
@@ -199,6 +202,28 @@ static future_t *start_up(void) {
 
   // Done telling the controller about what page 0 features we support
   // Request the remaining feature pages
+#ifdef ROCKCHIP_BLUETOOTH
+if (!strncmp(g_bt_chip_type, "RTL", 3)) {
+  if (HCI_LMP_EXTENDED_SUPPORTED(features_classic[0].as_array)) {
+    while (page_number < MAX_FEATURES_CLASSIC_PAGE_COUNT) {
+      response = AWAIT_COMMAND(packet_factory->make_read_local_extended_features(page_number));
+      packet_parser->parse_read_local_extended_features_response(
+        response,
+        &page_number,
+        &last_features_classic_page_index,
+        features_classic,
+        MAX_FEATURES_CLASSIC_PAGE_COUNT
+      );
+
+      //max page number == current page number,then break;
+      if (page_number == last_features_classic_page_index)
+        break;
+
+      page_number++; //otherwise£¬read next page
+    }
+  }
+} else {
+#endif
   while (page_number <= last_features_classic_page_index &&
          page_number < MAX_FEATURES_CLASSIC_PAGE_COUNT) {
     response = AWAIT_COMMAND(packet_factory->make_read_local_extended_features(page_number));
@@ -212,6 +237,9 @@ static future_t *start_up(void) {
 
     page_number++;
   }
+#ifdef ROCKCHIP_BLUETOOTH
+}
+#endif
 #if (BLE_INCLUDED == TRUE)
   // read BLE offload features support from controller
   response = AWAIT_COMMAND(packet_factory->make_ble_read_offload_features_support());
@@ -364,14 +392,30 @@ static uint8_t *get_local_supported_codecs(uint8_t *number_of_codecs) {
 
 static const bt_device_features_t *get_features_ble(void) {
   assert(readable);
+#ifdef BLUETOOTH_RTK
+  if (ble_supported) {
+    return &features_ble;
+  } else {
+    return NULL;
+  }
+#else
   assert(ble_supported);
   return &features_ble;
+#endif
 }
 
 static const uint8_t *get_ble_supported_states(void) {
   assert(readable);
+#ifdef BLUETOOTH_RTK
+  if (ble_supported) {
+    return ble_supported_states;
+  } else {
+    return NULL;
+  }
+#else
   assert(ble_supported);
   return ble_supported_states;
+#endif
 }
 
 static bool supports_simple_pairing(void) {
@@ -450,8 +494,16 @@ static uint16_t get_acl_data_size_classic(void) {
 
 static uint16_t get_acl_data_size_ble(void) {
   assert(readable);
+#ifdef BLUETOOTH_RTK
+  if (ble_supported) {
+    return acl_data_size_ble;
+  } else {
+    return 0;
+  }
+#else
   assert(ble_supported);
   return acl_data_size_ble;
+#endif
 }
 
 static uint16_t get_acl_packet_size_classic(void) {
@@ -466,8 +518,16 @@ static uint16_t get_acl_packet_size_ble(void) {
 
 static uint16_t get_ble_suggested_default_data_length(void) {
   assert(readable);
+#ifdef BLUETOOTH_RTK
+  if (ble_supported) {
+    return ble_suggested_default_data_length;
+  } else {
+    return 0;
+  }
+#else
   assert(ble_supported);
   return ble_suggested_default_data_length;
+#endif
 }
 
 static uint16_t get_acl_buffer_count_classic(void) {
@@ -483,14 +543,30 @@ static uint8_t get_acl_buffer_count_ble(void) {
 
 static uint8_t get_ble_white_list_size(void) {
   assert(readable);
+#ifdef BLUETOOTH_RTK
+  if (ble_supported) {
+    return ble_white_list_size;
+  } else {
+    return 0;
+  }
+#else
   assert(ble_supported);
   return ble_white_list_size;
+#endif
 }
 
 static uint8_t get_ble_resolving_list_max_size(void) {
   assert(readable);
+#ifdef BLUETOOTH_RTK
+  if (ble_supported) {
+    return ble_resolving_list_max_size;
+  } else {
+    return 0;
+  }
+#else
   assert(ble_supported);
   return ble_resolving_list_max_size;
+#endif
 }
 
 static void set_ble_resolving_list_max_size(int resolving_list_max_size) {
@@ -499,7 +575,9 @@ static void set_ble_resolving_list_max_size(int resolving_list_max_size) {
   if (resolving_list_max_size != 0) {
     assert(readable);
   }
+#ifndef BLUETOOTH_RTK
   assert(ble_supported);
+#endif
   ble_resolving_list_max_size = resolving_list_max_size;
 }
 

@@ -56,6 +56,20 @@ endif
 bluetooth_CONLYFLAGS += -std=c99
 bluetooth_CPPFLAGS :=
 
+# RealTek Bluetooth private configuration table
+#ifeq ($(BOARD_HAVE_BLUETOOTH_RTK),true)
+bluetooth_C_INCLUDES += $(LOCAL_PATH)/bta/hh
+bluetooth_C_INCLUDES += $(LOCAL_PATH)/bta/dm
+bluetooth_CFLAGS += -DBLUETOOTH_RTK
+bluetooth_CFLAGS += -DBLUETOOTH_RTK_API
+#endif
+
+#ifeq ($(BOARD_HAVE_BLUETOOTH_RTK_COEX),true)
+bluetooth_CFLAGS += -DBLUETOOTH_RTK_COEX
+#endif
+
+bluetooth_CFLAGS += -DROCKCHIP_BLUETOOTH
+
 include $(call all-subdir-makefiles)
 
 # Cleanup our locals

@@ -40,6 +40,10 @@
 #include "bt_utils.h"
 #include "osi/include/allocator.h"
 
+#ifdef ROCKCHIP_BLUETOOTH
+extern char g_bt_chip_type[];
+#endif
+
 extern fixed_queue_t *btu_general_alarm_queue;
 
 /*******************************************************************************
@@ -2575,7 +2579,11 @@ BOOLEAN l2cu_set_acl_priority (BD_ADDR bd_addr, UINT8 priority, BOOLEAN reset_af
         return (FALSE);
     }
 
+#ifdef BLUETOOTH_RTK_COEX
+    if (!strncmp(g_bt_chip_type, "RTL", 3) || BTM_IS_BRCM_CONTROLLER())
+#else
     if (BTM_IS_BRCM_CONTROLLER())
+#endif
     {
         /* Called from above L2CAP through API; send VSC if changed */
         if ((!reset_after_rs && (priority != p_lcb->acl_priority)) ||
@@ -2589,6 +2597,9 @@ BOOLEAN l2cu_set_acl_priority (BD_ADDR bd_addr, UINT8 priority, BOOLEAN reset_af
             UINT16_TO_STREAM (pp, p_lcb->handle);
             UINT8_TO_STREAM  (pp, vs_param);
 
+#ifdef BLUETOOTH_RTK_COEX
+            if (0 != strncmp(g_bt_chip_type, "RTL", 3))
+#endif
             BTM_VendorSpecificCommand (HCI_BRCM_SET_ACL_PRIORITY, HCI_BRCM_ACL_PRIORITY_PARAM_SIZE, command, NULL);
 
             /* Adjust lmp buffer allocation for this channel if priority changed */

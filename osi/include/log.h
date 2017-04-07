@@ -50,3 +50,7 @@
 #define LOG_ERROR(tag, fmt, args...)   ALOG(LOG_ERROR, tag, fmt, ## args)
 
 #endif  /* defined(OS_GENERIC) */
+
+#ifdef ROCKCHIP_BLUETOOTH
+extern char g_bt_chip_type[]; // WTF??? HERE???
+#endif
