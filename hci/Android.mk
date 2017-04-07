@@ -22,6 +22,22 @@ LOCAL_SRC_FILES := \
     src/vendor.c \
     ../EventLogTags.logtags
 
+ifeq ($(strip $(BOARD_CONNECTIVITY_MODULE)), mt5931_6622)
+LOCAL_CFLAGS += -DMTK_MT6622
+endif
+
+ifeq ($(strip $(BOARD_CONNECTIVITY_MODULE)), mt6622)
+LOCAL_CFLAGS += -DMTK_MT6622
+endif
+
+ifeq ($(strip $(BOARD_CONNECTIVITY_MODULE)), esp8089_bk3515)
+LOCAL_CFLAGS += -DBT_BK3515A
+endif
+
+ifeq ($(strip $(BOARD_CONNECTIVITY_MODULE)), rda587x)
+    LOCAL_CFLAGS += -DRDA587X_BLUETOOTH
+endif
+
 ifeq ($(BLUETOOTH_HCI_USE_MCT),true)
 LOCAL_CFLAGS += -DHCI_USE_MCT
 endif
@@ -38,6 +54,8 @@ LOCAL_SRC_FILES += \
 LOCAL_SRC_FILES += \
     src/rtk_parse.c
 #endif
+
+LOCAL_CFLAGS += -DHCI_USE_RTK_H5
 
 LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/include \

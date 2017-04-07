@@ -61,6 +61,9 @@ static UINT8 bta_dm_pin_cback (BD_ADDR bd_addr, DEV_CLASS dev_class, BD_NAME bd_
 static UINT8 bta_dm_new_link_key_cback(BD_ADDR bd_addr, DEV_CLASS dev_class, BD_NAME bd_name, LINK_KEY key, UINT8 key_type);
 static UINT8 bta_dm_authentication_complete_cback(BD_ADDR bd_addr, DEV_CLASS dev_class,BD_NAME bd_name, int result);
 static void bta_dm_local_name_cback(BD_ADDR bd_addr);
+#ifdef BT_BK3515A
+static BOOLEAN bta_dm_beken_set_all_link_master(UINT16 event);
+#endif
 static BOOLEAN bta_dm_check_av(UINT16 event);
 static void bta_dm_bl_change_cback (tBTM_BL_EVENT_DATA *p_data);
 
@@ -1285,6 +1288,14 @@ void bta_dm_search_start (tBTA_DM_MSG *p_data)
         memcpy(&bta_dm_cb.search_msg, &p_data->search, sizeof(tBTA_DM_API_SEARCH));
         return;
     }
+
+#ifdef BT_BK3515A
+    if (bta_dm_beken_set_all_link_master(BTA_DM_API_SEARCH_EVT))
+    {
+        memcpy(&bta_dm_cb.search_msg, &p_data->search, sizeof(tBTA_DM_API_SEARCH));
+        return;
+    }
+#endif
 
     BTM_ClearInqDb(NULL);
     /* save search params */
@@ -3164,6 +3175,35 @@ static void bta_dm_rs_cback (tBTM_ROLE_SWITCH_CMPL *p1)
         bta_dm_search_start((tBTA_DM_MSG *)&bta_dm_cb.search_msg);
     }
 }
+
+#ifdef BT_BK3515A
+static BOOLEAN bta_dm_beken_set_all_link_master(UINT16 event)
+{
+    BOOLEAN switching = FALSE;
+    UINT8 i;
+    tBTA_DM_PEER_DEVICE *p_dev;
+    APPL_TRACE_WARNING1("bta_dm_beken_set_all_link_master count:%d", bta_dm_cb.device_list.count);
+    for (i = 0; i < bta_dm_cb.device_list.count; i++)
+    {
+        p_dev = &bta_dm_cb.device_list.peer_device[i];
+        APPL_TRACE_WARNING3("%s [%d]: state:%d", __FUNCTION__, i, p_dev->conn_state);
+        if ((p_dev->conn_state == BTA_DM_CONNECTED))
+        {
+            /* make master and take away the role switch policy */
+            if (BTM_CMD_STARTED == BTM_SwitchRole (p_dev->peer_bdaddr, HCI_ROLE_MASTER, (tBTM_CMPL_CB *)bta_dm_rs_cback))
+            {
+                /* the role switch command is actually sent */
+                bta_dm_cb.rs_event = event;
+                switching = TRUE;
+                /* else either already master or can not switch for some reasons */
+                bta_dm_policy_cback(BTA_SYS_PLCY_CLR, 0, HCI_ENABLE_MASTER_SLAVE_SWITCH, p_dev->peer_bdaddr);
+                break;
+            }
+        }
+    }
+    return switching;
+}
+#endif
 
 /*******************************************************************************
 **

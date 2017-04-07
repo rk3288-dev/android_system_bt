@@ -56,6 +56,10 @@ LOCAL_C_INCLUDES+= . \
     external/zlib \
     $(call include-path-for, audio-utils)
 
+ifeq ($(strip $(BOARD_CONNECTIVITY_MODULE)),rda587x)
+    LOCAL_CFLAGS += -DRDA587X_BLUETOOTH
+endif
+
 LOCAL_SHARED_LIBRARIES := \
     libcutils \
     libdl \

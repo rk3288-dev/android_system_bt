@@ -4,6 +4,10 @@ LOCAL_PATH:= $(call my-dir)
 # ========================================================
 include $(CLEAR_VARS)
 
+ifeq ($(strip $(BOARD_CONNECTIVITY_MODULE)), esp8089_bk3515)
+    LOCAL_CFLAGS += -DBT_BK3515A
+endif
+
 LOCAL_SRC_FILES:= \
     ./dm/bta_dm_ci.c \
     ./dm/bta_dm_act.c \
