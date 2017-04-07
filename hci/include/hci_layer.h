@@ -88,8 +88,6 @@ typedef void (* p_callback)(void *p_mem);
 #ifdef BLUETOOTH_RTK
 extern char bt_hci_device_node[512];
 
-extern bool bluetooth_rtk_h5_flag ;//Default Usb H4 Interfcace ,if ture Uart H5 Interface
-
 /******************************************************************************
 **  Constants & Macros
 ******************************************************************************/

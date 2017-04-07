@@ -821,8 +821,6 @@ static void btif_hh_upstreams_evt(UINT16 event, char* p_param)
                                 profile_map |= 0x03;
                             if (check_cod((bt_bdaddr_t*)p_data->conn.bda, COD_HID_KEYBOARD ))
                                 profile_map |= 0x02;
-                            if (check_cod((bt_bdaddr_t*)p_data->conn.bda, COD_HID_MAJOR))
-                                profile_map |= 0x01;
                             p_dev_rec->profile_map = profile_map;
                             rtk_parse_manager_get_interface()->rtk_add_le_profile(
                                 p_data->conn.bda, p_dev_rec->hci_handle, profile_map);
